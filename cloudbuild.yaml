@@ -1,0 +1,88 @@
+steps:
+  # 1. Build imagen Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA'
+      - '.'
+
+  # 2. Push imagen a Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA'
+
+  # 3. Deploy Job PROD (leads, sale_order, sale_order_line, account_moves, purchase_order, stock_move)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - etl-crm-sale-account-purchase-stock
+      - --image=us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA
+      - --region=us-central1
+      - --args=prod
+      - --set-secrets=ODOO_URL=odoo-url:latest,ODOO_DB=odoo-db:latest,ODOO_USERNAME=odoo-username:latest,ODOO_PASSWORD=odoo-password:latest
+      - --task-timeout=7200
+      - --max-retries=0
+      - --memory=2Gi
+      - --project=YOUR_GCP_PROJECT_ID
+
+  # 4. Deploy Job MASTER (partner, users, currency, team, product_product, product_template)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - etl-res-crm-product
+      - --image=us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA
+      - --region=us-central1
+      - --args=master
+      - --set-secrets=ODOO_URL=odoo-url:latest,ODOO_DB=odoo-db:latest,ODOO_USERNAME=odoo-username:latest,ODOO_PASSWORD=odoo-password:latest
+      - --task-timeout=7200
+      - --max-retries=0
+      - --memory=2Gi
+      - --project=YOUR_GCP_PROJECT_ID
+
+  # 5. Deploy Job OPS (helpdesk_ticket, project.project, project.task, account_analytic_line, mail_message, res_users)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - etl-helpdesk-project-account-mail-res
+      - --image=us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA
+      - --region=us-central1
+      - --args=ops
+      - --set-secrets=ODOO_URL=odoo-url:latest,ODOO_DB=odoo-db:latest,ODOO_USERNAME=odoo-username:latest,ODOO_PASSWORD=odoo-password:latest
+      - --task-timeout=7200
+      - --max-retries=0
+      - --memory=2Gi
+      - --project=YOUR_GCP_PROJECT_ID
+
+  # 6. Deploy Job RATING (rating_rating)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - etl-rating
+      - --image=us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA
+      - --region=us-central1
+      - --args=rating
+      - --set-secrets=ODOO_URL=odoo-url:latest,ODOO_DB=odoo-db:latest,ODOO_USERNAME=odoo-username:latest,ODOO_PASSWORD=odoo-password:latest
+      - --task-timeout=7200
+      - --max-retries=0
+      - --memory=2Gi
+      - --project=YOUR_GCP_PROJECT_ID
+
+images:
+  - 'us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/etl-pipeline/etl-pipeline:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

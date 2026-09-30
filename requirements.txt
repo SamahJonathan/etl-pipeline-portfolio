@@ -1,0 +1,7 @@
+google-cloud-bigquery[pandas]
+google-auth
+google-api-core
+python-dotenv
+pandas
+numpy
+urllib3

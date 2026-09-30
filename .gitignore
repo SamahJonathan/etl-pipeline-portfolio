@@ -1,0 +1,18 @@
+buceopartner.py
+buceousers.py
+analizar_property_payment_term.py
+
+# Credenciales
+.env
+credenciales.json
+
+# Logs y cache
+logs/
+__pycache__/
+*.pyc
+
+# Archivos de estado
+account_move_line_processed.json
+
+# Documentacion local
+CAMBIOS.md
